@@ -1,8 +1,8 @@
 import re
 from bs4 import BeautifulSoup
-import csv
 import requests
 import scanpage
+import json
 
 
 def type1(soup):
@@ -15,7 +15,7 @@ def type1(soup):
             span = x.find_all('span')
             title = span[0].text
             data = re.sub('[ +()?→Â]', ' ', x.text.replace(title, '')
-                          ).replace("&puncsp", '').strip()
+                          ).replace("&puncsp", '').replace("\n", '').replace("\u00b7", '').strip()
             output.append(title + " : " + data)
         return output
     except:
@@ -30,34 +30,33 @@ def type2(soup):
         for x in Items:
             subitems = x.find_all('span')
             output.append(
-                re.sub(' +', ' ', (subitems[0].text + " : " + subitems[1].text).strip().replace("\n", '')))
+                re.sub(' +', ' ', (subitems[0].text + " : " + subitems[1].text).strip().replace("\n", '').replace("\u00b7", '').replace("&puncsp", '')))
         return output
     except:
         return type3(soup)
 
 
 def type3(soup):
+    try:
+        output = []
+        fabric = soup.find('div', attrs={"class": "col-md-4 col-sm-4"})
+        fabList = fabric.find_all('li')
+        for x in fabList:
+            output.append(
+                re.sub('[ +()?→Â]', ' ', x.text).replace("\n", '').replace("\u00b7", '').replace("&puncsp", '').strip())
+        return output
+    except:
+        return type4(soup)
+
+
+def type4(soup):
     output = []
-    fabric = soup.find('div', attrs={"class": "col-md-4 col-sm-4"})
+    fabric = soup.find(
+        'div', attrs={"class": "col-xs-12 col-sm-6 align-left tech-details"})
     fabList = fabric.find_all('li')
     for x in fabList:
-        output.append(x.text)
+        output.append(
+            re.sub('[ +()?→Â]', ' ', x.text).replace("\n", '').replace("\u00b7", '').replace("&puncsp", '').strip())
     return output
 
 
-def main():
-    # urls = ["https://propercloth.com/products/biella-navy-wool-shearling-collar-flight-jacket-726.html"]
-    # datafile = open('datafile.csv', 'a+',
-    #                 newline='', encoding="utf-8")
-    # writer = csv.writer(datafile)
-    # for url in urls:
-    #     r = requests.get(url)
-    #     soup = BeautifulSoup(r.text, "html.parser")
-    #     s = type2(soup)
-    #     s.insert(0, url)
-    #     writer.writerow(s)
-    print(scanpage.GetStockedProducts("https://propercloth.com/dress-shirts"))
-
-
-if __name__ == "__main__":
-    main()
